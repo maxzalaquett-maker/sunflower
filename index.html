@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sunflower Mecklenburg | Garden Sun Mapper</title>
+  <meta name="description" content="Find the sunniest place to plant a garden in Mecklenburg County." />
+  <link rel="preconnect" href="https://unpkg.com">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Sunflower Mecklenburg</p>
+      <h1>Find the sunniest spot before you plant.</h1>
+    </div>
+    <button id="runAnalysisTop" class="primary small">Run sun estimate</button>
+  </header>
+
+  <main class="layout">
+    <aside class="panel" aria-label="Sunflower controls">
+      <section class="card intro">
+        <h2>1. Find your property</h2>
+        <p>Enter a Mecklenburg County address or use your current location. The app will try to pull the parcel boundary, then you can draw garden spots and shade blockers.</p>
+        <label for="addressInput">Address</label>
+        <div class="row">
+          <input id="addressInput" type="text" placeholder="Example: 600 E 4th St, Charlotte, NC" />
+          <button id="searchAddress" class="secondary">Search</button>
+        </div>
+        <button id="useLocation" class="secondary full">Use my location</button>
+        <p id="status" class="status">Ready.</p>
+      </section>
+
+      <section class="card">
+        <h2>2. Choose a tool</h2>
+        <p class="muted">Use polygons for garden beds, trees, buildings, sheds, and organic shapes. Use lines for fences. Use Cursor to edit or delete.</p>
+        <div class="mode-grid" role="group" aria-label="Drawing mode">
+          <button class="mode active" data-mode="cursor">Cursor / edit</button>
+          <button class="mode" data-mode="garden">Garden bed</button>
+          <button class="mode" data-mode="tree">Tree / organic shape</button>
+          <button class="mode" data-mode="fence">Fence line</button>
+          <button class="mode" data-mode="building">Building</button>
+          <button class="mode" data-mode="shed">Shed</button>
+        </div>
+
+        <div class="tool-actions">
+          <button id="startDraw" class="primary full">Start drawing</button>
+          <button id="deleteSelected" class="secondary full" disabled>Delete selected shape</button>
+        </div>
+
+        <div class="height-box">
+          <label for="heightPreset">Default height for new blockers</label>
+          <select id="heightPreset">
+            <option value="0">Garden bed / no height</option>
+            <option value="6">6 ft fence</option>
+            <option value="10">10 ft shrub/shed</option>
+            <option value="20">20 ft house/small tree</option>
+            <option value="35" selected>35 ft large tree</option>
+            <option value="55">55 ft mature tree</option>
+          </select>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>3. Preview shadows</h2>
+        <p class="muted">Slide through the year and day to see how estimated shadows shift.</p>
+        <label for="monthSlider">Month: <strong id="monthLabel">June</strong></label>
+        <input id="monthSlider" type="range" min="1" max="12" step="1" value="6" />
+        <label for="hourSlider">Hour: <strong id="hourLabel">12:00 PM</strong></label>
+        <input id="hourSlider" type="range" min="6" max="20" step="1" value="12" />
+        <button id="previewShadow" class="secondary full">Preview this month/hour</button>
+      </section>
+
+      <section class="card">
+        <h2>4. Estimate garden sun</h2>
+        <p class="muted">This still runs a fuller seasonal check across common garden dates.</p>
+        <div class="checks">
+          <label><input type="checkbox" class="datePreset" value="2026-03-21" checked> Mar 21</label>
+          <label><input type="checkbox" class="datePreset" value="2026-05-01" checked> May 1</label>
+          <label><input type="checkbox" class="datePreset" value="2026-06-21" checked> Jun 21</label>
+          <label><input type="checkbox" class="datePreset" value="2026-08-01" checked> Aug 1</label>
+          <label><input type="checkbox" class="datePreset" value="2026-09-21" checked> Sep 21</label>
+        </div>
+        <div class="row compact">
+          <label>Start <input id="startHour" type="number" value="8" min="5" max="20"></label>
+          <label>End <input id="endHour" type="number" value="18" min="6" max="21"></label>
+        </div>
+        <button id="runAnalysis" class="primary full">Run sun estimate</button>
+      </section>
+
+      <section class="card results-card">
+        <h2>Results</h2>
+        <div id="results" class="results-empty">Draw at least one garden bed and one or more likely shade blockers, then run the estimate.</div>
+      </section>
+
+      <section class="card warning">
+        <h2>Accuracy note</h2>
+        <p>This is a planning estimate. It cannot know recent tree removals, fence height, pruning, leaf density, or neighboring changes unless the user adds them.</p>
+      </section>
+    </aside>
+
+    <section class="map-wrap">
+      <div id="map"></div>
+      <div id="drawHelp" class="draw-help hidden" aria-live="polite">
+        <strong id="drawHelpTitle">Drawing</strong>
+        <p id="drawHelpText">Click the map to add points.</p>
+        <div class="draw-help-actions">
+          <button id="finishShape" class="primary small">Finish shape</button>
+          <button id="undoPoint" class="secondary small">Undo point</button>
+          <button id="cancelDraw" class="secondary small">Cancel</button>
+        </div>
+      </div>
+      <div class="legend" aria-label="Map legend">
+        <span><i class="swatch parcel"></i> Parcel</span>
+        <span><i class="swatch garden"></i> Garden</span>
+        <span><i class="swatch shadow"></i> Estimated shade</span>
+        <span><i class="swatch tree"></i> Tree/blocker</span>
+        <span><i class="swatch fence"></i> Fence</span>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+  <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+  <script src="https://unpkg.com/suncalc@1.9.0/suncalc.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
