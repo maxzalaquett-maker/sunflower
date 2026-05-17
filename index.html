@@ -3,18 +3,27 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sunflower | Garden Sun Mapper</title>
-  <meta name="description" content="Compare possible garden spots in North Carolina and South Carolina using sunlight estimates, map data, and your own yard notes." />
+  <title>Sunflower | FARM127 Field Tool</title>
+  <meta name="description" content="A FARM127 field tool for comparing sun, shade, and possible garden spots using map data and yard notes." />
   <link rel="preconnect" href="https://unpkg.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&family=Source+Sans+3:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <header class="topbar">
-    <div>
-      <p class="eyebrow">Sunflower <span class="version">Prototype v0.4</span></p>
-      <h1>Find the sunniest spot before you plant.</h1>
+    <div class="brand-lockup" aria-label="Sunflower app brand">
+      <div class="brand-mark image-mark" aria-hidden="true">
+        <img src="assets/farm127-sunflower-icon.png" alt="" />
+      </div>
+      <div>
+        <p class="eyebrow">FARM127 Field Tool <span class="version">Prototype v0.6</span></p>
+        <h1>Sunflower</h1>
+        <p class="tagline">Compare sun, shade, and possible garden spots.</p>
+      </div>
     </div>
     <div class="top-actions">
       <button id="resetMap" class="secondary small">Reset map</button>
@@ -26,7 +35,7 @@
     <aside class="panel" aria-label="Sunflower controls">
       <section class="card intro">
         <h2>1. Find your property</h2>
-        <p>Search for an address in North Carolina or South Carolina, or use your current location. Mecklenburg County properties get an enhanced parcel lookup and local aerial imagery when available.</p>
+        <p>Search for an address in North Carolina or South Carolina, or use your current location. Mecklenburg County properties get enhanced parcel lookup and local aerial imagery when available.</p>
         <label for="addressInput">Address</label>
         <div class="row">
           <input id="addressInput" type="text" placeholder="Example: 600 E 4th St, Charlotte, NC" />
@@ -37,15 +46,15 @@
       </section>
 
       <section class="card notice">
-        <h2>Where this works</h2>
+        <h2>Where this works today</h2>
         <p><strong>Address search:</strong> North Carolina and South Carolina.</p>
         <p><strong>Enhanced data:</strong> Mecklenburg County, NC parcel boundaries and local aerial imagery.</p>
         <p><strong>Outside Mecklenburg:</strong> You can still map sunlight by drawing garden beds and shade blockers manually.</p>
       </section>
 
       <section class="card">
-        <h2>2. Choose a tool</h2>
-        <p class="muted">Use polygons for garden beds, trees, buildings, sheds, and organic shapes. Use lines for fences. Use Cursor to edit or delete.</p>
+        <h2>2. Map your yard</h2>
+        <p class="muted">Draw what could shape the light: garden beds, trees, buildings, sheds, organic shapes, and fence lines. Use Cursor to adjust or delete your notes.</p>
         <div class="mode-grid" role="group" aria-label="Drawing mode">
           <button class="mode active" data-mode="cursor">Cursor / edit</button>
           <button class="mode" data-mode="garden">Garden bed</button>
@@ -74,8 +83,8 @@
       </section>
 
       <section class="card">
-        <h2>3. Preview shadows</h2>
-        <p class="muted">Slide through the year and day to see how estimated shadows shift.</p>
+        <h2>3. Watch the light move</h2>
+        <p class="muted">Slide through the year and day to see how estimated shadows shift across the yard.</p>
         <label for="monthSlider">Month: <strong id="monthLabel">June</strong></label>
         <input id="monthSlider" type="range" min="1" max="12" step="1" value="6" />
         <label for="hourSlider">Hour: <strong id="hourLabel">12:00 PM</strong></label>
@@ -84,7 +93,7 @@
       </section>
 
       <section class="card">
-        <h2>4. Estimate garden sun</h2>
+        <h2>4. Find the best planting spot</h2>
         <p class="muted">This runs a fuller seasonal check across common garden dates.</p>
         <div class="checks">
           <label><input type="checkbox" class="datePreset" value="2026-03-21" checked> Mar 21</label>
@@ -106,8 +115,8 @@
       </section>
 
       <section class="card warning">
-        <h2>Accuracy note</h2>
-        <p>Sunflower estimates sunlight using public map data and your edits. Always verify sunlight before planting.</p>
+        <h2>Honest estimate</h2>
+        <p>Sunflower estimates sunlight using public map data and your edits. Walk the yard and verify sunlight before planting.</p>
         <p>This prototype cannot know recent tree removals, fence height, pruning, leaf density, or neighboring changes unless you add them.</p>
       </section>
 
@@ -140,9 +149,9 @@
   </main>
 
   <footer class="site-footer">
-    <span>Sunflower Prototype v0.4</span>
+    <span>Sunflower Prototype v0.6</span>
     <span>NC/SC address search. Mecklenburg County enhanced parcel support.</span>
-    <span>Planning estimate only.</span>
+    <span>FARM127 visual system. Planning estimate only.</span>
   </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

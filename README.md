@@ -1,6 +1,6 @@
 # Sunflower
 
-A prototype garden sunlight estimator for North Carolina and South Carolina, with enhanced Mecklenburg County support.
+A FARM127 field-tool prototype for estimating garden sunlight in North Carolina and South Carolina, with enhanced Mecklenburg County support.
 
 ## What it does
 
@@ -54,6 +54,16 @@ http://localhost:8080
 - Esri World Imagery for broad basemap coverage
 - Charlotte/Mecklenburg GIS aerial imagery for Mecklenburg close-zoom basemap
 - Charlotte/Mecklenburg GIS parcel service for Mecklenburg parcel lookup
+
+## Brand direction
+
+This version uses the FARM127 brand guidance more directly:
+
+- Uses the uploaded FARM127 sunflower icon asset in the primary header moment.
+- Uses the brand palette: Sunflower Gold, Deep Soil Brown, Cream Field, Olive Stem, Clay, Sky Wash, Charcoal Brown, and Warm Gray.
+- Uses Fraunces for headlines and Source Sans 3 for interface/body copy through Google Fonts.
+- Keeps the sunflower restrained and avoids rebuilding the logo from CSS pieces.
+- Keeps the voice warm, direct, practical, and grounded.
 
 ## Suggested next steps before public sharing
 
