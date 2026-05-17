@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sunflower Mecklenburg | Garden Sun Mapper</title>
-  <meta name="description" content="Find the sunniest place to plant a garden in Mecklenburg County." />
+  <title>Sunflower | Garden Sun Mapper</title>
+  <meta name="description" content="Compare possible garden spots in North Carolina and South Carolina using sunlight estimates, map data, and your own yard notes." />
   <link rel="preconnect" href="https://unpkg.com">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
@@ -13,17 +13,20 @@
 <body>
   <header class="topbar">
     <div>
-      <p class="eyebrow">Sunflower Mecklenburg</p>
+      <p class="eyebrow">Sunflower <span class="version">Prototype v0.4</span></p>
       <h1>Find the sunniest spot before you plant.</h1>
     </div>
-    <button id="runAnalysisTop" class="primary small">Run sun estimate</button>
+    <div class="top-actions">
+      <button id="resetMap" class="secondary small">Reset map</button>
+      <button id="runAnalysisTop" class="primary small">Run sun estimate</button>
+    </div>
   </header>
 
   <main class="layout">
     <aside class="panel" aria-label="Sunflower controls">
       <section class="card intro">
         <h2>1. Find your property</h2>
-        <p>Enter a Mecklenburg County address or use your current location. The app will try to pull the parcel boundary, then you can draw garden spots and shade blockers.</p>
+        <p>Search for an address in North Carolina or South Carolina, or use your current location. Mecklenburg County properties get an enhanced parcel lookup and local aerial imagery when available.</p>
         <label for="addressInput">Address</label>
         <div class="row">
           <input id="addressInput" type="text" placeholder="Example: 600 E 4th St, Charlotte, NC" />
@@ -31,6 +34,13 @@
         </div>
         <button id="useLocation" class="secondary full">Use my location</button>
         <p id="status" class="status">Ready.</p>
+      </section>
+
+      <section class="card notice">
+        <h2>Where this works</h2>
+        <p><strong>Address search:</strong> North Carolina and South Carolina.</p>
+        <p><strong>Enhanced data:</strong> Mecklenburg County, NC parcel boundaries and local aerial imagery.</p>
+        <p><strong>Outside Mecklenburg:</strong> You can still map sunlight by drawing garden beds and shade blockers manually.</p>
       </section>
 
       <section class="card">
@@ -75,7 +85,7 @@
 
       <section class="card">
         <h2>4. Estimate garden sun</h2>
-        <p class="muted">This still runs a fuller seasonal check across common garden dates.</p>
+        <p class="muted">This runs a fuller seasonal check across common garden dates.</p>
         <div class="checks">
           <label><input type="checkbox" class="datePreset" value="2026-03-21" checked> Mar 21</label>
           <label><input type="checkbox" class="datePreset" value="2026-05-01" checked> May 1</label>
@@ -97,7 +107,14 @@
 
       <section class="card warning">
         <h2>Accuracy note</h2>
-        <p>This is a planning estimate. It cannot know recent tree removals, fence height, pruning, leaf density, or neighboring changes unless the user adds them.</p>
+        <p>Sunflower estimates sunlight using public map data and your edits. Always verify sunlight before planting.</p>
+        <p>This prototype cannot know recent tree removals, fence height, pruning, leaf density, or neighboring changes unless you add them.</p>
+      </section>
+
+      <section class="card privacy">
+        <h2>Privacy note</h2>
+        <p>Your drawings are stored only in your browser during this session. This prototype does not save your address, location, or yard plan to a database.</p>
+        <p><a href="mailto:max@farm127.org?subject=Sunflower%20prototype%20feedback">Send feedback</a></p>
       </section>
     </aside>
 
@@ -113,7 +130,7 @@
         </div>
       </div>
       <div class="legend" aria-label="Map legend">
-        <span><i class="swatch parcel"></i> Parcel</span>
+        <span><i class="swatch parcel"></i> Mecklenburg parcel</span>
         <span><i class="swatch garden"></i> Garden</span>
         <span><i class="swatch shadow"></i> Estimated shade</span>
         <span><i class="swatch tree"></i> Tree/blocker</span>
@@ -121,6 +138,12 @@
       </div>
     </section>
   </main>
+
+  <footer class="site-footer">
+    <span>Sunflower Prototype v0.4</span>
+    <span>NC/SC address search. Mecklenburg County enhanced parcel support.</span>
+    <span>Planning estimate only.</span>
+  </footer>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>

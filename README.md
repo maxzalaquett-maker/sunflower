@@ -1,11 +1,39 @@
-# Sunflower Mecklenburg
+# Sunflower
 
-A local prototype for estimating garden sunlight in Mecklenburg County, NC.
+A prototype garden sunlight estimator for North Carolina and South Carolina, with enhanced Mecklenburg County support.
+
+## What it does
+
+- Searches for addresses in North Carolina and South Carolina.
+- Uses Mecklenburg County parcel boundaries when the selected address is in Mecklenburg County, NC.
+- Uses Mecklenburg/Charlotte aerial imagery for closer zoom in Mecklenburg County.
+- Uses Esri World Imagery as the broader NC/SC basemap.
+- Lets users draw garden beds, trees, fences, buildings, sheds, and other shade blockers.
+- Estimates shadow direction by month and hour.
+- Estimates direct sun hours across common garden dates.
+
+## Current prototype behavior
+
+- Address lookup tries ArcGIS World Geocoding first.
+- U.S. Census Geocoder is used as a fallback.
+- Mecklenburg County parcel lookup is enhanced through the Charlotte/Mecklenburg ArcGIS REST parcel service.
+- Outside Mecklenburg County, users can still search, zoom, draw manually, and estimate sunlight, but parcel boundaries are not loaded yet.
+
+## Privacy note
+
+This prototype does not save user addresses, locations, or yard drawings to a database. Drawings exist only in the browser session unless future save/export features are added.
+
+## Accuracy note
+
+Sunflower estimates sunlight using map data and user edits. It cannot automatically know recent tree removals, fence height, pruning, leaf density, or neighboring changes unless the user adds them.
+
+Always verify sunlight before planting.
 
 ## Run locally
 
+From this folder:
+
 ```bash
-cd sunflower-mecklenburg
 python3 -m http.server 8080
 ```
 
@@ -15,16 +43,22 @@ Then open:
 http://localhost:8080
 ```
 
-## What changed in this version
+## Data and libraries
 
-- Address lookup now tries ArcGIS World Geocoding first, scoped toward Mecklenburg County.
-- The U.S. Census Geocoder remains as a fallback.
-- The map now uses Mecklenburg/Charlotte aerial imagery as the main basemap.
-- The Leaflet map is configured to zoom much closer, up to zoom level 23 where tiles are available.
-- Esri World Imagery is available as a fallback basemap through the layer control.
+- Leaflet for map rendering
+- Leaflet Draw for drawing/editing
+- Turf.js for spatial calculations
+- SunCalc for sun angle estimates
+- ArcGIS World Geocoding for primary address search
+- U.S. Census Geocoder fallback
+- Esri World Imagery for broad basemap coverage
+- Charlotte/Mecklenburg GIS aerial imagery for Mecklenburg close-zoom basemap
+- Charlotte/Mecklenburg GIS parcel service for Mecklenburg parcel lookup
 
-## Known limits
+## Suggested next steps before public sharing
 
-- Public map data cannot reliably know fence height, recent tree removal, pruning, or small yard structures.
-- The app estimates shade based on user-drawn blockers and rough height assumptions.
-- Parcel lookup depends on the Charlotte/Mecklenburg ArcGIS REST service being available from the browser.
+- Add NC and SC parcel services county-by-county or through state parcel sources if available.
+- Add tree canopy overlays where reliable local datasets exist.
+- Add building footprint auto-load where available.
+- Add an export/share report.
+- Add a clear feedback channel and issue tracker.

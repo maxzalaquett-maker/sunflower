@@ -46,14 +46,14 @@ const aerial2021 = L.tileLayer(MECK_AERIAL_2021_TILE_URL, {
   maxZoom: 23,
   maxNativeZoom: 23,
   errorTileUrl: ""
-}).addTo(map);
+});
 
 const esriWorldImagery = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
   attribution: "Tiles © Esri — imagery used for planning reference",
   maxZoom: 23,
   maxNativeZoom: 19,
-  opacity: 0.9
-});
+  opacity: 0.95
+}).addTo(map);
 
 const osmLabels = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: "© OpenStreetMap contributors",
@@ -64,8 +64,8 @@ const osmLabels = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.pn
 
 L.control.layers(
   {
-    "Mecklenburg aerial 2021 — closest zoom": aerial2021,
-    "Esri world imagery fallback": esriWorldImagery
+    "Esri world imagery — NC/SC search": esriWorldImagery,
+    "Mecklenburg aerial 2021 — closest zoom": aerial2021
   },
   { "Street labels": osmLabels },
   { collapsed: true }
@@ -291,47 +291,64 @@ function isLikelyInMecklenburg(lat, lng) {
   return lat >= 35.0 && lat <= 35.55 && lng >= -81.15 && lng <= -80.55;
 }
 
-function normalizeAddressForMecklenburg(address) {
-  const hasState = /\bNC\b|North Carolina/i.test(address);
-  const hasCity = /Charlotte|Matthews|Mint Hill|Huntersville|Cornelius|Davidson|Pineville|Mecklenburg/i.test(address);
-  if (hasState && hasCity) return address;
-  if (hasState) return `${address}, Mecklenburg County`;
-  if (hasCity) return `${address}, NC`;
+function isLikelyInCarolinas(lat, lng) {
+  // Broad bounding box for North Carolina + South Carolina.
+  return lat >= 32.0 && lat <= 36.75 && lng >= -84.5 && lng <= -75.2;
+}
+
+function normalizeAddressForCarolinas(address) {
+  const hasState = /\bNC\b|\bSC\b|North Carolina|South Carolina/i.test(address);
+  if (hasState) return address;
+
+  const hasKnownCarolinaCity = /Charlotte|Mecklenburg|Matthews|Mint Hill|Huntersville|Cornelius|Davidson|Pineville|Raleigh|Durham|Chapel Hill|Greensboro|Winston-Salem|Asheville|Wilmington|Concord|Gastonia|Monroe|Rock Hill|Fort Mill|Indian Land|Lancaster|Columbia|Greenville|Spartanburg|Charleston|Mount Pleasant|Myrtle Beach/i.test(address);
+  if (hasKnownCarolinaCity) return address;
+
+  // Charlotte remains the best default because this prototype started as Mecklenburg-first.
   return `${address}, Charlotte, NC`;
+}
+
+function preferredCandidate(candidates) {
+  return candidates
+    .filter(c => c.score >= 75 && c.location && isLikelyInCarolinas(c.location.y, c.location.x))
+    .sort((a, b) => {
+      const aMeck = isLikelyInMecklenburg(a.location.y, a.location.x) ? 1 : 0;
+      const bMeck = isLikelyInMecklenburg(b.location.y, b.location.x) ? 1 : 0;
+      return (bMeck - aMeck) || (b.score - a.score);
+    })[0];
 }
 
 async function geocodeWithArcGIS(address) {
   const url = new URL(ARCGIS_GEOCODE_URL);
   url.searchParams.set("f", "json");
-  url.searchParams.set("singleLine", normalizeAddressForMecklenburg(address));
-  url.searchParams.set("outFields", "Match_addr,Addr_type,Score");
-  url.searchParams.set("maxLocations", "5");
+  url.searchParams.set("singleLine", normalizeAddressForCarolinas(address));
+  url.searchParams.set("outFields", "Match_addr,Addr_type,Score,Region,Subregion,City");
+  url.searchParams.set("maxLocations", "10");
   url.searchParams.set("countryCode", "USA");
   url.searchParams.set("location", "-80.8431,35.2271");
-  url.searchParams.set("searchExtent", "-81.15,35.0,-80.55,35.55");
+  // Search extent covers NC + SC.
+  url.searchParams.set("searchExtent", "-84.5,32.0,-75.2,36.75");
   url.searchParams.set("forStorage", "false");
   const res = await fetch(url.toString());
   if (!res.ok) throw new Error("ArcGIS address lookup failed.");
   const data = await res.json();
   const candidates = data?.candidates || [];
-  const good = candidates.find(c => c.score >= 80 && c.location && isLikelyInMecklenburg(c.location.y, c.location.x));
-  if (!good) throw new Error("No Mecklenburg address match found from ArcGIS.");
+  const good = preferredCandidate(candidates);
+  if (!good) throw new Error("No North Carolina or South Carolina address match found from ArcGIS.");
   return { lat: good.location.y, lng: good.location.x, label: good.address, source: "ArcGIS" };
 }
 
 async function geocodeWithCensus(address) {
   const url = new URL(CENSUS_GEOCODE_URL);
-  url.searchParams.set("address", normalizeAddressForMecklenburg(address));
+  url.searchParams.set("address", normalizeAddressForCarolinas(address));
   url.searchParams.set("benchmark", "Public_AR_Current");
   url.searchParams.set("format", "json");
   const res = await fetch(url.toString());
   if (!res.ok) throw new Error("Census address lookup failed.");
   const data = await res.json();
-  const match = data?.result?.addressMatches?.[0];
-  if (!match) throw new Error("No Census address match found.");
-  const loc = { lat: match.coordinates.y, lng: match.coordinates.x, label: match.matchedAddress, source: "Census" };
-  if (!isLikelyInMecklenburg(loc.lat, loc.lng)) throw new Error("Census matched an address outside Mecklenburg County.");
-  return loc;
+  const matches = data?.result?.addressMatches || [];
+  const match = matches.find(m => isLikelyInCarolinas(m.coordinates.y, m.coordinates.x));
+  if (!match) throw new Error("No Census address match found in North Carolina or South Carolina.");
+  return { lat: match.coordinates.y, lng: match.coordinates.x, label: match.matchedAddress, source: "Census" };
 }
 
 async function geocodeAddress(address) {
@@ -339,6 +356,17 @@ async function geocodeAddress(address) {
   try { return await geocodeWithArcGIS(address); } catch (err) { errors.push(err.message); }
   try { return await geocodeWithCensus(address); } catch (err) { errors.push(err.message); }
   throw new Error(`Address lookup failed. ${errors.join(" ")}`);
+}
+
+function applyBestBasemapForLocation(lat, lng) {
+  if (isLikelyInMecklenburg(lat, lng)) {
+    if (map.hasLayer(esriWorldImagery)) map.removeLayer(esriWorldImagery);
+    if (!map.hasLayer(aerial2021)) aerial2021.addTo(map);
+  } else {
+    if (map.hasLayer(aerial2021)) map.removeLayer(aerial2021);
+    if (!map.hasLayer(esriWorldImagery)) esriWorldImagery.addTo(map);
+  }
+  if (!map.hasLayer(osmLabels)) osmLabels.addTo(map);
 }
 
 async function loadParcel(lat, lng) {
@@ -364,13 +392,25 @@ async function loadParcel(lat, lng) {
 }
 
 async function handleLocation(lat, lng, label = "Selected location") {
-  setStatus(`Loading parcel for ${label}...`);
-  map.setView([lat, lng], 21);
+  if (!isLikelyInCarolinas(lat, lng)) {
+    setStatus("That location appears to be outside North Carolina or South Carolina. You can still draw manually, but address search is tuned for NC/SC.");
+  }
+  applyBestBasemapForLocation(lat, lng);
+  const inMeck = isLikelyInMecklenburg(lat, lng);
+  setStatus(inMeck ? `Loading Mecklenburg parcel for ${label}...` : `Centered on ${label}. Parcel lookup is currently enhanced for Mecklenburg County only.`);
+  map.setView([lat, lng], inMeck ? 21 : 19);
   if (state.previewMarker) map.removeLayer(state.previewMarker);
   state.previewMarker = L.marker([lat, lng]).addTo(map).bindPopup(label).openPopup();
+
+  if (!inMeck) {
+    if (state.parcelLayer) { map.removeLayer(state.parcelLayer); state.parcelLayer = null; }
+    setStatus("Address found in NC/SC. Outside Mecklenburg, draw garden beds and shade blockers manually, then preview shadows or run an estimate.");
+    return;
+  }
+
   try {
     await loadParcel(lat, lng);
-    setStatus("Parcel loaded. Draw garden polygons and shade blockers, then preview shadows or run an estimate.");
+    setStatus("Mecklenburg parcel loaded. Draw garden polygons and shade blockers, then preview shadows or run an estimate.");
   } catch (err) {
     setStatus(`${err.message} You can still draw a yard area manually.`);
   }
@@ -380,11 +420,11 @@ document.getElementById("searchAddress").addEventListener("click", async () => {
   const address = document.getElementById("addressInput").value.trim();
   if (!address) return setStatus("Enter an address first.");
   try {
-    setStatus("Searching address... If it fails, try adding city + NC, for example: 600 E 4th St, Charlotte, NC");
+    setStatus("Searching address... For best results, include city + NC or SC, for example: 600 E 4th St, Charlotte, NC");
     const loc = await geocodeAddress(address);
     await handleLocation(loc.lat, loc.lng, `${loc.label} (${loc.source})`);
   } catch (err) {
-    setStatus(`${err.message} Try use my location, or zoom to your property and draw manually.`);
+    setStatus(`${err.message} Try “use my location,” include NC/SC in the address, or zoom to your property and draw manually.`);
   }
 });
 
@@ -396,6 +436,22 @@ document.getElementById("useLocation").addEventListener("click", () => {
     () => setStatus("Could not access location. You can still search by address or draw manually."),
     { enableHighAccuracy: true, timeout: 12000 }
   );
+});
+
+document.getElementById("resetMap").addEventListener("click", () => {
+  stopDrawing(false);
+  clearShadows();
+  drawnItems.clearLayers();
+  state.features = [];
+  selectLayer(null);
+  if (state.parcelLayer) { map.removeLayer(state.parcelLayer); state.parcelLayer = null; }
+  if (state.previewMarker) { map.removeLayer(state.previewMarker); state.previewMarker = null; }
+  document.getElementById("addressInput").value = "";
+  resultsEl.innerHTML = `<div class="results-empty">Draw at least one garden bed and one or more likely shade blockers, then run the estimate.</div>`;
+  applyBestBasemapForLocation(35.2271, -80.8431);
+  map.setView([35.2271, -80.8431], 12);
+  setMode("cursor");
+  setStatus("Map reset. Search an NC/SC address or use your location to start again.");
 });
 
 document.getElementById("runAnalysis").addEventListener("click", runAnalysis);
