@@ -34,7 +34,7 @@ function setStatus(message) { statusEl.textContent = message; }
 function titleCase(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
 const map = L.map("map", {
-  zoomControl: true,
+  zoomControl: false,
   maxZoom: 23,
   zoomSnap: 0.25,
   zoomDelta: 0.5
@@ -61,6 +61,8 @@ const osmLabels = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.pn
   maxNativeZoom: 19,
   opacity: 0.18
 }).addTo(map);
+
+L.control.zoom({ position: "bottomright" }).addTo(map);
 
 L.control.layers(
   {

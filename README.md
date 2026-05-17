@@ -72,3 +72,13 @@ This version uses the FARM127 brand guidance more directly:
 - Add building footprint auto-load where available.
 - Add an export/share report.
 - Add a clear feedback channel and issue tracker.
+
+## Mobile-friendly updates in v0.7
+
+- The map appears before the control panel on smaller screens.
+- Header and action buttons resize for phones.
+- Touch targets are at least 44px where practical.
+- Map zoom controls move to the bottom-right for thumb access.
+- Drawing help appears as a bottom sheet on mobile.
+- Input font sizes are set to avoid iOS auto-zoom.
+- The map uses `svh` viewport units for better mobile browser behavior.
